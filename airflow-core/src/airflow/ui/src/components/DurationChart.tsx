@@ -36,7 +36,7 @@ import { useNavigate } from "react-router-dom";
 
 import type { TaskInstanceResponse, GridRunsResponse } from "openapi/requests/types.gen";
 import { getComputedCSSVariableValue } from "src/theme";
-import { DEFAULT_DATETIME_FORMAT, renderDuration } from "src/utils/datetimeUtils";
+import { DEFAULT_DATETIME_FORMAT_WITH_TZ, renderDuration } from "src/utils/datetimeUtils";
 import { buildTaskInstanceUrl } from "src/utils/links";
 
 ChartJS.register(
@@ -171,7 +171,9 @@ export const DurationChart = ({
               label: translate("durationChart.runDuration"),
             },
           ],
-          labels: entries.map((entry: RunResponse) => dayjs(entry.run_after).format(DEFAULT_DATETIME_FORMAT)),
+          labels: entries.map((entry: RunResponse) =>
+            dayjs(entry.run_after).format(DEFAULT_DATETIME_FORMAT_WITH_TZ),
+          ),
         }}
         datasetIdKey="id"
         options={{

@@ -23,7 +23,7 @@ import tz from "dayjs/plugin/timezone";
 import utc from "dayjs/plugin/utc";
 
 import { useTimezone } from "src/context/timezone";
-import { DEFAULT_DATETIME_FORMAT, DEFAULT_DATETIME_FORMAT_WITH_TZ } from "src/utils/datetimeUtils";
+import { DEFAULT_DATETIME_FORMAT_WITH_TZ } from "src/utils/datetimeUtils";
 
 dayjs.extend(utc);
 dayjs.extend(tz);
@@ -35,7 +35,7 @@ type Props = {
   readonly showTooltip?: boolean;
 } & SpanProps;
 
-const Time = ({ datetime, format = DEFAULT_DATETIME_FORMAT, showTooltip = true, ...rest }: Props) => {
+const Time = ({ datetime, format = DEFAULT_DATETIME_FORMAT_WITH_TZ, showTooltip = true, ...rest }: Props) => {
   const { selectedTimezone } = useTimezone();
   const time = dayjs(datetime);
 

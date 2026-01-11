@@ -27,7 +27,7 @@ import { FlexibleForm } from "src/components/FlexibleForm/FlexibleForm";
 import Time from "src/components/Time";
 import { useParamStore } from "src/queries/useParamStore";
 import { useUpdateHITLDetail } from "src/queries/useUpdateHITLDetail";
-import { DEFAULT_DATETIME_FORMAT } from "src/utils/datetimeUtils";
+import { DEFAULT_DATETIME_FORMAT_WITH_TZ } from "src/utils/datetimeUtils";
 import { getHITLParamsDict, getHITLFormData, getPreloadHITLFormData } from "src/utils/hitl";
 
 type HITLResponseFormProps = {
@@ -98,7 +98,7 @@ export const HITLResponseForm = ({ hitlDetail }: HITLResponseFormProps) => {
       {hitlDetail.response_received ? (
         <Text color="fg.muted" fontSize="sm">
           {translate("response.received")}
-          <Time datetime={hitlDetail.responded_at} format={DEFAULT_DATETIME_FORMAT} />
+          <Time datetime={hitlDetail.responded_at} format={DEFAULT_DATETIME_FORMAT_WITH_TZ} />
           {hitlDetail.responded_by_user
             ? ` ${translate("common:table.from").toLowerCase()} ${hitlDetail.responded_by_user.name}`
             : undefined}
