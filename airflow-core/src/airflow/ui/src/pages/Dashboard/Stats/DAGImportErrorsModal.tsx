@@ -16,16 +16,16 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import { Heading, Text, HStack } from "@chakra-ui/react";
+import { Heading, Text, HStack, VStack, Collapsible, IconButton, Box } from "@chakra-ui/react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { LuFileWarning } from "react-icons/lu";
+import { LuChevronDown, LuChevronUp, LuFileWarning } from "react-icons/lu";
 import { PiFilePy } from "react-icons/pi";
 
 import { useImportErrorServiceGetImportErrors } from "openapi/queries";
 import { SearchBar } from "src/components/SearchBar";
 import Time from "src/components/Time";
-import { Accordion, Dialog } from "src/components/ui";
+import { Dialog } from "src/components/ui";
 import { Pagination } from "src/components/ui/Pagination";
 
 type ImportDAGErrorModalProps = {
@@ -38,6 +38,7 @@ const PAGE_LIMIT = 15;
 export const DAGImportErrorsModal: React.FC<ImportDAGErrorModalProps> = ({ onClose, open }) => {
   const [page, setPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
+  const [openItem, setOpenItem] = useState<number | null>(null);
 
   const { data } = useImportErrorServiceGetImportErrors(
     {
@@ -68,7 +69,11 @@ export const DAGImportErrorsModal: React.FC<ImportDAGErrorModalProps> = ({ onClo
         <Dialog.Header display="flex" justifyContent="space-between">
           <HStack fontSize="xl">
             <LuFileWarning />
-            <Heading>{translate("importErrors.dagImportError", { count: data?.total_entries ?? 0 })}</Heading>
+            <Heading>
+              {translate("importErrors.dagImportError", {
+                count: data?.total_entries ?? 0,
+              })}
+            </Heading>
           </HStack>
           <SearchBar
             defaultValue={searchQuery}
@@ -76,37 +81,66 @@ export const DAGImportErrorsModal: React.FC<ImportDAGErrorModalProps> = ({ onClo
             placeholder={translate("importErrors.searchByFile")}
           />
         </Dialog.Header>
-
         <Dialog.CloseTrigger />
-
         <Dialog.Body>
-          <Accordion.Root collapsible multiple size="md" variant="enclosed">
-            {data?.import_errors.map((importError) => (
-              <Accordion.Item key={importError.import_error_id} value={importError.filename}>
-                <Accordion.ItemTrigger cursor="pointer">
-                  <Text display="flex" fontWeight="bold">
-                    {translate("components:versionDetails.bundleName")}
-                    {": "}
-                    {importError.bundle_name}
-                  </Text>
-                  <PiFilePy />
-                  {importError.filename}
-                </Accordion.ItemTrigger>
-                <Accordion.ItemContent>
-                  <Text color="fg.muted" fontSize="sm" mb={1}>
-                    {translate("importErrors.timestamp")}
-                    {": "}
-                    <Time datetime={importError.timestamp} />
-                  </Text>
-                  <Text color="fg.error" fontSize="sm" whiteSpace="pre-wrap">
-                    <code>{importError.stack_trace}</code>
-                  </Text>
-                </Accordion.ItemContent>
-              </Accordion.Item>
-            ))}
-          </Accordion.Root>
-        </Dialog.Body>
+          <VStack gap={3}>
+            {data?.import_errors.map((importError) => {
+              const isOpen = openItem === importError.import_error_id;
 
+              return (
+                <Collapsible.Root
+                  key={importError.import_error_id}
+                  onOpenChange={() => setOpenItem(isOpen ? null : importError.import_error_id)}
+                  open={isOpen}
+                  w="100%"
+                >
+                  <HStack
+                    align="start"
+                    borderRadius="md"
+                    borderWidth="1px"
+                    justify="space-between"
+                    px={3}
+                    py={2}
+                  >
+                    <VStack align="start" userSelect="text" w="100%">
+                      <HStack>
+                        <PiFilePy />
+                        <Text fontWeight="bold">
+                          {translate("components:versionDetails.bundleName")}
+                          {": "}
+                          {importError.bundle_name}
+                        </Text>
+                      </HStack>
+
+                      <Text cursor="text" fontFamily="mono" fontSize="sm" wordBreak="break-all">
+                        {importError.filename}
+                      </Text>
+                    </VStack>
+                    <Box alignItems="center" display="flex" flexShrink={0} justifyContent="center">
+                      <Collapsible.Trigger asChild>
+                        <IconButton aria-label={translate("importErrors.toggle")} size="sm" variant="ghost">
+                          {isOpen ? <LuChevronUp /> : <LuChevronDown />}
+                        </IconButton>
+                      </Collapsible.Trigger>
+                    </Box>
+                  </HStack>
+                  <Collapsible.Content>
+                    <Box borderRadius="0 0 md md" borderTop="0" borderWidth="1px" px={3} py={2}>
+                      <Text color="fg.muted" fontSize="sm" mb={1}>
+                        {translate("importErrors.timestamp")}
+                        {": "}
+                        <Time datetime={importError.timestamp} />
+                      </Text>
+                      <Text color="fg.error" fontFamily="mono" fontSize="sm" whiteSpace="pre-wrap">
+                        {importError.stack_trace}
+                      </Text>
+                    </Box>
+                  </Collapsible.Content>
+                </Collapsible.Root>
+              );
+            })}
+          </VStack>
+        </Dialog.Body>
         <Pagination.Root
           count={data?.total_entries ?? 0}
           onPageChange={(event) => setPage(event.page)}
