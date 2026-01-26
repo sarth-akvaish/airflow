@@ -29,7 +29,7 @@ test.describe("Providers Page", () => {
     await providers.waitForLoad();
   });
 
-  test("verify assets page heading", async () => {
+  test("verify providers page heading", async () => {
     await expect(providers.heading).toBeVisible();
   });
 
@@ -68,23 +68,54 @@ test.describe("Providers Page", () => {
     }
   });
 
-  test("verify pagination controls navigate between pages", async () => {
-    await providers.navigateTo("/providers?limit=5&offset=0");
+  test("verify providers pagination", async () => {
+    const limit = 5;
+
+    await providers.navigateTo(`/providers?offset=0&limit=${limit}`);
     await providers.waitForLoad();
 
-    const page1Initial = await providers.providerNames();
+    const rows = await providers.getRowCount();
 
-    expect(page1Initial.length).toBeGreaterThan(0);
+    expect(rows).toBeGreaterThan(0);
 
-    const pagination = providers.page.locator('[data-scope="pagination"]');
+    const initialProviderNames = await providers.providerNames();
 
-    await pagination.getByRole("button", { name: /^page 2$/i }).click();
-    await expect.poll(() => providers.providerNames(), { timeout: 30_000 }).not.toEqual(page1Initial);
+    expect(initialProviderNames.length).toBeGreaterThan(0);
 
-    const page2Assets = await providers.providerNames();
+    await expect(providers.paginationNextButton).toBeVisible();
+    await expect(providers.paginationPrevButton).toBeVisible();
 
-    await pagination.getByRole("button", { name: /page 1/i }).click();
+    await providers.paginationNextButton.click();
+    await providers.waitForLoad();
 
-    await expect.poll(() => providers.providerNames(), { timeout: 30_000 }).not.toEqual(page2Assets);
+    await providers.page.waitForURL((url) => {
+      const u = new URL(url);
+      const offset = u.searchParams.get("offset");
+
+      return offset !== null && offset !== "0";
+    });
+
+    const rowsPage2 = await providers.getRowCount();
+
+    expect(rowsPage2).toBeGreaterThan(0);
+
+    const ProviderNamesAfterNext = await providers.providerNames();
+
+    expect(ProviderNamesAfterNext.length).toBeGreaterThan(0);
+    expect(ProviderNamesAfterNext).not.toEqual(initialProviderNames);
+
+    await providers.paginationPrevButton.click();
+    await providers.waitForLoad();
+
+    await providers.page.waitForURL((url) => {
+      const u = new URL(url);
+      const offset = u.searchParams.get("offset");
+
+      return offset === "0" || offset === null;
+    });
+
+    const rowsBack = await providers.getRowCount();
+
+    expect(rowsBack).toBeGreaterThan(0);
   });
 });
